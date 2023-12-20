@@ -1,0 +1,13 @@
+/.idea/
+__pycache__/
+.vscode/
+build/
+dist/
+*.egg-info/
+**/outputs/
+**/None*.db
+**/logs/
+**/*.log
+/.vs
+/test_report/
+data/sqlite_dbs/

@@ -1,0 +1,68 @@
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: pipAuthenticate@1
+  inputs:
+    artifactFeeds: "AIMS.TScience.NL2Code"
+
+- script: |
+    pip download dbcopilot --no-dependencies
+  displayName: "Download dbcopilot"
+  workingDirectory: "$(Build.SourcesDirectory)/samples/sqlserver"
+
+- task: NodeTool@0
+  inputs:
+    versionSpec: '18.x'
+  displayName: 'Install Node.js'
+
+- task: npmAuthenticate@0
+  inputs:
+    workingFile: '$(Build.SourcesDirectory)/samples/sqlserver/client/.npmrc'
+
+- script: |
+    npm install
+    npm run build
+  displayName: 'npm install and build'
+  workingDirectory: '$(Build.SourcesDirectory)/samples/sqlserver/client'
+  env:
+    WEBSITE_SITE_NAME: dbcopilot-demos-dev2
+
+- task: CopyFiles@2
+  displayName: 'Copy files to: $(Build.BinariesDirectory)'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)/samples/sqlserver'
+    Contents: |
+      **
+      !client/**
+    TargetFolder: '$(Build.BinariesDirectory)'
+    OverWrite: false
+    CleanTargetFolder: false
+
+- task: CopyFiles@2
+  displayName: 'Copy files to: $(Build.BinariesDirectory)'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)/samples/sqlserver/client'
+    Contents: |
+      **
+      !node_modules/**
+    TargetFolder: '$(Build.BinariesDirectory)/client'
+    OverWrite: false
+    CleanTargetFolder: false
+
+- task: ArchiveFiles@2
+  displayName: 'Archive files to $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+  inputs:
+    rootFolderOrFile: '$(Build.BinariesDirectory)'
+    includeRootFolder: false
+    archiveType: zip
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: dbcopilot-sample-dev2

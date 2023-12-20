@@ -1,0 +1,4 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+name: dbcopilot-sai-endpoint
+auth_mode: key
+description: test endpoint

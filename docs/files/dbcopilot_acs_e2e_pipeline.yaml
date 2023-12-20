@@ -1,0 +1,51 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+type: pipeline
+
+display_name: DBPilot ACS E2E Pipeline
+description: Single job pipeline to generate nl2sql with ACS
+
+experiment_name: nl2sql
+
+inputs:
+  endpoint_name: "dbcopilot-sai-endpoint"
+  deployment_name: "e2e"
+  embeddings_model: "azure_open_ai://endpoint/{your_aoai_endpoint_name}/deployment/{your_embedding_model_deployment_name}/model/text-embedding-ada-002"
+  sql_datastore_uri: "your-sql-datastore-name" # format: azureml://datastores/{your-sql-datastore-name}
+  chat_aoai_deployment_name: "your-gpt-35-turbo-deployment-name"
+  embedding_aoai_deployment_name: "your-text-embedding-ada-002-deployment-name"
+  mir_environment: "azureml://registries/Project-DBCopilot-Canary/environments/db_copilot_mir"
+  compute: "azureml:{your-azureml-compute-cluster-name}"
+  # use the connection name step #3 to replace the following connection names. You could use the same for embedding & grounding
+  embedding_connection: "/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.MachineLearningServices/workspaces/{workspace_name}/connections/{aoai_connection_name}"
+  llm_connection: "/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.MachineLearningServices/workspaces/{workspace_name}/connections/{llm_connection_name}"
+  acs_connection: "/subscriptions/{subscription_id}/resourceGroups/{resource_group}/providers/Microsoft.MachineLearningServices/workspaces/{workspace_name}/connections/{acs_connection_name}"
+  # use unique index name for each of your acs index
+  acs_config_meta: '{"index_name":"{your-acs-index-name-for-grounding}","semantic_config_name":"default","source_key":"sourcepage","push_embeddings":"True"}'
+  acs_config_sample: '{"index_name":"{your-acs-index-name-for-sample}","semantic_config_name":"default","source_key":"sourcepage","push_embeddings":"True"}'
+jobs:
+  db_copilot_grounding_pipeline:
+    component: azureml://registries/Project-DBCopilot-Canary/components/db_copilot_acs_e2e
+    compute: ${{parent.inputs.compute}}
+    inputs:
+      db_datastore: ${{parent.inputs.sql_datastore_uri}}
+      embeddings_model: ${{parent.inputs.embeddings_model}}
+      chat_aoai_deployment_name: ${{parent.inputs.chat_aoai_deployment_name}}
+      embedding_aoai_deployment_name: ${{parent.inputs.embedding_aoai_deployment_name}}
+      endpoint_name: ${{parent.inputs.endpoint_name}}
+      deployment_name: ${{parent.inputs.deployment_name}}
+      mir_environment: ${{parent.inputs.mir_environment}}
+      embedding_connection: ${{parent.inputs.embedding_connection}}
+      llm_connection: ${{parent.inputs.llm_connection}}
+      acs_connection: ${{parent.inputs.acs_connection}}
+      acs_config_meta: ${{parent.inputs.acs_config_meta}}
+      acs_config_sample: ${{parent.inputs.acs_config_sample}}
+      # optional parametesr:
+      # sample_data: only need to provide your own sample.json
+      # temperature: default 0.0. Need to be in range [0.0, 1.0]
+      # max_tables:
+      # max_columns:
+      # max_rows:
+      # max_sampling_rows:
+      # max_text_length:
+      # selected_tables: json string like  ["table1","table2","table3"]
+      # column_settings: json string in format of dict[str, dict[str, str]] like {"table1": {"column1": "type1", "column2": "type2"}, "table2": {"column1": "type1", "column2": "type2"}}

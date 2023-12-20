@@ -1,0 +1,7 @@
+[
+    {
+        "db_id": "BikeStores",
+        "conn_string": "sqlserver://SERVER=db-samples-for-tprompt.database.windows.net;UID=ReadOnlyUser;PWD=p@ssw0rd!23;DATABASE=BikeStores;PORT=1433;",
+        "sampleQueries": ["top 3 brands by sales"]
+    }
+]
